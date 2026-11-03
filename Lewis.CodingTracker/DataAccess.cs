@@ -7,6 +7,7 @@ namespace Lewis.CodingTracker;
 public class DataAccess
 {
     private readonly string _connectionString;
+    private UserValidation _userValidation;
 
     public DataAccess(string connectionString)
     {
@@ -16,12 +17,7 @@ public class DataAccess
     // Create record of a coding session
     public void CreateCodingSession(string startTimeStr, string endTimeStr)
     {
-        // Add validation in a separate file for user input
-
-        DateTime startTime = DateTime.ParseExact(startTimeStr, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
-        DateTime endTime = DateTime.ParseExact(endTimeStr, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
-
-        TimeSpan duration = endTime - startTime;
+        var validatedSessionTimings = _userValidation.DateTimeValidator(startTimeStr, endTimeStr);
         
         using (var connection = new SQLiteConnection(_connectionString))
         {
@@ -29,9 +25,9 @@ public class DataAccess
 
             connection.Execute(sql, new 
             { 
-                StartTime = startTime.ToString(), 
-                EndTime = endTime.ToString(), 
-                Duration = duration.ToString() 
+                StartTime = validatedSessionTimings.StartTime.ToString(), 
+                EndTime = validatedSessionTimings.EndTime.ToString(), 
+                Duration = validatedSessionTimings.Duration.ToString() 
             });
         }
 
@@ -54,7 +50,7 @@ public class DataAccess
 
         foreach (var codingSession in codingSessions)
         {
-            Console.WriteLine($"Session Number: {codingSession.Id} Start time: {codingSession.StartTime} End time: {codingSession.EndTime} Duration: {codingSession.Duration}");
+            Console.WriteLine($"Session Number: {codingSession.Id} Start time: {codingSession.sessionTimings.StartTime} End time: {codingSession.sessionTimings.EndTime} Duration: {codingSession.sessionTimings.Duration}");
         }
     }
     
@@ -64,10 +60,7 @@ public class DataAccess
     {
         // Add validation in a separate file for user input
 
-        DateTime startTime = DateTime.ParseExact(newStartTimeStr, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
-        DateTime endTime = DateTime.ParseExact(newEndTimeStr, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
-
-        TimeSpan duration = endTime - startTime;
+        var validatedSessionTimings = _userValidation.DateTimeValidator(newStartTimeStr, newEndTimeStr);
         
         using (var connection = new SQLiteConnection(_connectionString))
         {
@@ -75,9 +68,9 @@ public class DataAccess
 
             connection.Execute(sql, new 
             { 
-                StartTime = startTime.ToString(), 
-                EndTime = endTime.ToString(), 
-                Duration = duration.ToString(),
+                StartTime = validatedSessionTimings.StartTime.ToString(), 
+                EndTime = validatedSessionTimings.EndTime.ToString(), 
+                Duration = validatedSessionTimings.Duration.ToString(),
                 Id = id
             });
         }
